@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather-App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+        <div class="card">
+            <div class="search">
+                <input type="text" placeholder="şehir adı giriniz" spellcheck="false" id="cityInput" oninput="suggestCities()"> <!-- Kullanıcıdan şehir adı girmesi için bir giriş alanı --> 
+                <button><img src="images/search.png"></button> <!-- Şehir aramak için bir düğme -->
+            </div>
+            <div class="sListe">
+                <ul id="suggestions"></ul> 
+                <!-- önerlier listesi -->
+            </div>
+            <div class="error">
+                <p>Bilinmeyen şehir ismi</p> <!-- Hatalı giriş durumunda görüntülenecek hata mesajı -->
+            </div>
+            <div class="weather">
+                <img src="images/rain.png" class="weather-icon"> <!-- Hava durumu ikonunu gösteren resim -->
+                <h1 class="temp">40°C</h1> <!-- Sıcaklık bilgisini gösteren başlık -->
+                <h2 class="city">Adana</h2> <!-- Şehir adını gösteren başlık -->
+                <div class="details">
+                    <div class="col">
+                        <img src="images/humidity.png" > <!-- Nem ikonunu gösteren resim -->
+                        <div>
+                            <p class="humidity">50%</p> <!-- Nem oranını gösteren paragraf -->
+                            <p>Humidity</p> <!-- Nem metnini gösteren paragraf -->
+                        </div>
+                    </div>
+                    <div class="col">
+                        <img src="images/wind.png" > <!-- Rüzgar hızı ikonunu gösteren resim -->
+                        <div>
+                            <p class="wind">15 km/h</p> <!-- Rüzgar hızını gösteren paragraf -->
+                            <p>Wind Speed</p> <!-- Rüzgar hızı metnini gösteren paragraf -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+        <script src="cities.json"></script>
+       
+       <script>
+            // Input kutusu ve öneri listesi
+            const cityInput = document.getElementById('cityInput');
+            const suggestionsList = document.getElementById('suggestions');
+            let citiesData; // Şehir verilerini depolamak için değişken
+
+            // Şehir verilerini JSON dosyasından al
+            fetch('cities.json') //bu kod bloğu verileri JSON formatından JavaScript nesnelerine dönüştürür
+              .then(response => response.json())
+              .then(data => citiesData = data) // Şehir verilerini değişkene ata
+              .catch(error => console.error('Error fetching cities data:', error));
+
+            const MAX_SUGGESTIONS = 3; // Gösterilecek maksimum öneri sayısı
+
+            // Input kutusundaki metne göre şehir önerileri yap
+            function suggestCities() {
+              const inputText = cityInput.value.trim().toLowerCase(); // Boşlukları kaldır ve metni küçük harfe çevir
+              if (inputText === '') {
+                suggestionsList.innerHTML = ''; // Eğer input boşsa önerileri temizle
+                return;
+              }
+
+              // Input metniyle başlayan şehirleri filtrele ve maksimum öneri sayısını al
+              const suggestions = citiesData.filter(city => city.name.toLowerCase().startsWith(inputText)).slice(0, MAX_SUGGESTIONS);
+
+              // Önceki önerileri temizle
+              suggestionsList.innerHTML = '';
+
+              // Yeni önerileri göster
+              suggestions.forEach(city => {
+                const li = document.createElement('li');
+                li.textContent = city.name; // Öneri olarak şehir adını ekle
+                li.addEventListener('click', () => {
+                  cityInput.value = city.name; // Öneriye tıklandığında input kutusuna şehir adını yaz
+                  suggestionsList.innerHTML = ''; // Öneri listesini temizle
+                });
+                suggestionsList.appendChild(li);
+             });
+            }
+            const apiKey ="7a067376bf61bbc1eead0b0394ba6ea2"; // Hava durumu API anahtarını tanımlar
+            const apiUrl ="https://api.openweathermap.org/data/2.5/weather?units=metric&q="; // Hava durumu API URL'sini tanımlar
+            const searchBox=document.querySelector(".search input"); // Arama kutusunu seçer
+            const searchBtn=document.querySelector(".search button"); // Arama düğmesini seçer
+            const weatherIcon = document.querySelector(".weather-icon"); // Hava durumu ikonunu seçer
+            async function checkWeather(city){ // Şehir hava durumunu kontrol eden asenkron fonksiyon
+                const response = await fetch(apiUrl + city +  `&appid=${apiKey}`); // API'ye şehir adını gönderir ve yanıtı bekler
+                
+                if(response.status==404){ // Yanıt 404 ise
+                    document.querySelector(".error").style.display="block"; // Hata mesajını görünür yapar
+                    document.querySelector(".weather").style.display="none"; // Hava durumu bilgilerini gizler
+                }
+                else{ // Yanıt 404 değilse
+                    var data = await response.json(); // Yanıtı JSON olarak alır
+        
+                    document.querySelector(".city").innerHTML = data.name; // Şehir adını günceller
+                    document.querySelector(".temp").innerHTML = Math.round(data.main.temp) + "°C"; // Sıcaklık bilgisini günceller
+                    document.querySelector(".humidity").innerHTML = data.main.humidity+"%"; // Nem bilgisini günceller
+                    document.querySelector(".wind").innerHTML = data.wind.speed+" km/h"; // Rüzgar hızı bilgisini günceller
+                    
+                    if(data.weather[0].main =="Clouds"){ // Hava durumu anahtar kelimesi "Clouds" ise
+                        weatherIcon.src = "images/clouds.png"; // Bulutlu hava ikonunu gösterir
+                    }
+                    else if(data.weather[0].main =="Clear"){ // Hava durumu anahtar kelimesi "Clear" ise
+                        weatherIcon.src = "images/clear.png"; // Açık hava ikonunu gösterir
+                    }
+                    else if(data.weather[0].main =="Rain"){ // Hava durumu anahtar kelimesi "Rain" ise
+                        weatherIcon.src = "images/rain.png"; // Yağmurlu hava ikonunu gösterir
+                    }
+                    else if(data.weather[0].main =="Drizzle"){ // Hava durumu anahtar kelimesi "Drizzle" ise
+                        weatherIcon.src = "images/drizzle.png"; // Çisenti hava ikonunu gösterir
+                    }
+                    else if(data.weather[0].main =="Mist"){ // Hava durumu anahtar kelimesi "Mist" ise
+                        weatherIcon.src = "images/mist.png"; // Puslu hava ikonunu gösterir
+                    }
+        
+                    document.querySelector(".weather").style.display="block"; // Hava durumu bilgilerini görünür yapar
+                    document.querySelector(".error").style.display="none"; // Hata mesajını gizler
+                }
+            }
+            
+            searchBtn.addEventListener("click", ()=>{ // Arama düğmesine tıklama olayı
+                checkWeather(searchBox.value); // checkWeather fonksiyonunu çağırır
+            });
+            
+            searchBox.addEventListener('keydown',function(event){ // Arama kutusunda bir tuşa basılma olayı
+                if(event.key=='Enter'){ // Enter tuşuna basıldığında
+                    checkWeather(searchBox.value); // checkWeather fonksiyonunu çağırır
+                }
+            });
+        </script>
+        
+
+
+</body>
+</html>
