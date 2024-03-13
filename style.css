@@ -9,10 +9,11 @@ body{
 }
 .card{
     width: 90%;
-    max-width: 470px;
+    max-width: 600px;
+    
     background: linear-gradient(135deg, #00feba, #5b548a);
     color: #fff;
-    margin: 100px auto 0;
+    margin: 100px auto 50px;
     border-radius: 20px;
     padding: 40px 35px;
     text-align: center;
@@ -67,12 +68,13 @@ body{
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    margin-top: 50px;
+   
 }
 .col{
     display: flex;
     align-items: center;
     text-align: left;
+    margin-left: 20px;
 }
 .col img{
     width: 40px;
@@ -80,7 +82,8 @@ body{
 }
 .humidity,.wind{
     font-size: 28px;
-    margin-top: -6px;
+    margin-top: 6px;
+    margin-bottom: -8px;
 }
 .weather{
     display: none;
@@ -93,6 +96,7 @@ body{
     display: none;
 }
 ul {
+    
     list-style-type: none;
     padding: 0;
   }
@@ -109,3 +113,4 @@ ul {
   li:hover {
     background-color: #f4f4f4;
   }
+  
