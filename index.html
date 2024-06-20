@@ -5,12 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Weather-App</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/css/bootstrap.min.css" integrity="sha384-xOolHFLEh07PJGoPkLv1IbcEPTNtaed2xpHsD9ESMhqIYd0nLMwNLD69Npy4HI+N" crossorigin="anonymous"></head>
 <body class="bg-dark">
         <div class="card">
             
             <div class="search">
-                <input type="text" placeholder="şehir adı giriniz" spellcheck="false" id="cityInput" oninput="suggestCities()"> <!-- Kullanıcıdan şehir adı girmesi için bir giriş alanı --> 
+                <input type="text" placeholder="şehir adı giriniz" spellcheck="false" id="cityInput" autocomplete="off" oninput="suggestCities()"> <!-- Kullanıcıdan şehir adı girmesi için bir giriş alanı --> 
                 <button><img src="images/search.png"></button> <!-- Şehir aramak için bir düğme -->
             </div>
             <div class="sListe">
@@ -23,11 +24,11 @@
             <div class="weather">
                 <img src="images/rain.png" class="weather-icon"> <!-- Hava durumu ikonunu gösteren resim -->
                 <h1 class="temp">40°C</h1> <!-- Sıcaklık bilgisini gösteren başlık -->
-                <h2 class="city">Adana</h2> <!-- Şehir adını gösteren başlık -->
+                <h2 class="city" id="sehir">Adana</h2> <!-- Şehir adını gösteren başlık -->
                 
 
                  <p> <!-- BU KISIMDA BUTON OLUSTURUYORUZ BURAYI HAZIR ALDIM BOOTSTRAPTEN  -->
-                    <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+                    <button class="btn btn-primary text-start" type="button" data-bs-toggle="collapse" data-bs-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
                       Detaylar
                     </button>
                   </p>
@@ -38,20 +39,24 @@
                                 <img src="images/humidity.png" > <!-- Nem ikonunu gösteren resim -->
                                 <div>
                                     <p class="humidity">50%</p> <!-- Nem oranını gösteren paragraf -->
-                                    <p>Humidity</p> <!-- Nem metnini gösteren paragraf -->
+                                    <p>Nem</p> <!-- Nem metnini gösteren paragraf -->
                                 </div>
                             </div>
                             <div class="col">
                                 <img src="images/wind.png" > <!-- Rüzgar hızı ikonunu gösteren resim -->
                                 <div>
                                     <p class="wind">15 km/h</p> <!-- Rüzgar hızını gösteren paragraf -->
-                                    <p>Wind Speed</p> <!-- Rüzgar hızı metnini gösteren paragraf -->
+                                    <p>Rüzgar Hızı</p> <!-- Rüzgar hızı metnini gösteren paragraf -->
                                 </div>
                             </div>
                         </div>
                     </div>
                   </div>
-
+                <div class="favCityy">
+                    <button class="btn btn-primary text-start" type="button" id="FavCity">
+                        <i class="fa fa-home"></i>
+                    </button>
+                </div>
 
             </div>
         </div>
@@ -62,11 +67,20 @@
 
 
        <script>
-       
-            // Input kutusu ve öneri listesi
-            const cityInput = document.getElementById('cityInput');
+            const MAX_SUGGESTIONS =  3; // Gösterilecek maksimum öneri sayısı
+            const apiKey ="7a067376bf61bbc1eead0b0394ba6ea2"; // Hava durumu API anahtarını tanımlar
+            const apiUrl ="https://api.openweathermap.org/data/2.5/weather?units=metric&q="; // Hava durumu API URL'sini tanımlar
+            const searchBox=document.querySelector(".search input"); // Arama kutusunu seçer
+            const searchBtn=document.querySelector(".search button"); // Arama düğmesini seçer
+            const weatherIcon = document.querySelector(".weather-icon"); // Hava durumu ikonunu seçer
+            const cityInput = document.getElementById('cityInput');// Input kutusu ve öneri listesi
             const suggestionsList = document.getElementById('suggestions');
             let citiesData; // Şehir verilerini depolamak için değişken
+            var favCityButton = document.getElementById('FavCity');
+
+            
+        
+
 
             // Şehir verilerini JSON dosyasından al
             fetch('cities.json') //bu kod bloğu verileri JSON formatından JavaScript nesnelerine dönüştürür
@@ -74,38 +88,120 @@
               .then(data => citiesData = data) // Şehir verilerini değişkene ata
               .catch(error => console.error('Error fetching cities data:', error));
 
-            const MAX_SUGGESTIONS = 3; // Gösterilecek maksimum öneri sayısı
+
+            
+            
+            // textContent değişkenindeki içeriği yerel depolamaya yolla ve sil
+            favCityButton.addEventListener('click', function() {
+                const currentCity = document.getElementById('sehir').textContent;
+                var YerelData=localStorage.getItem('favCity');
+                if(YerelData==currentCity){
+                    localStorage.clear();
+                    favCityButton.style.backgroundColor="#000000"
+                    favCityButton.style.borderColor="#000000"
+                    alert("favori şehir olan "+currentCity+" kaldırıldı")
+                }
+                else{
+                    localStorage.setItem('favCity', currentCity);
+                    favCityButton.style.backgroundColor="#63a4ea"
+                    favCityButton.style.borderColor="#63a4ea"
+                    alert("favori şehir "+currentCity+ " olarak ayarlandı")
+                    
+                }
+                
+            });
+
+            // Sayfa yüklendiğinde yerel depolamadaki favori şehri kontrol et ve yükle
+             window.onload = function() {
+                const favCity = localStorage.getItem('favCity');
+                if (favCity) {
+                    checkWeather(favCity);
+                }
+            };
+
 
             // Input kutusundaki metne göre şehir önerileri yap
             function suggestCities() {
-              const inputText = cityInput.value.trim().toLowerCase(); // Boşlukları kaldır ve metni küçük harfe çevir
-              if (inputText === '') {
-                suggestionsList.innerHTML = ''; // Eğer input boşsa önerileri temizle
-                return;
-              }
+                const inputText = normalizeString(cityInput.value.trim().toLowerCase());
+                if (inputText === '') {
+                    suggestionsList.innerHTML = '';
+                    return;
+                }
 
-              // Input metniyle başlayan şehirleri filtrele ve maksimum öneri sayısını al
-              const suggestions = citiesData.filter(city => city.name.toLowerCase().startsWith(inputText)).slice(0, MAX_SUGGESTIONS);
+                const suggestions = citiesData.filter(city => normalizeString(city.name.toLowerCase()).startsWith(inputText)).slice(0, MAX_SUGGESTIONS);
+                suggestionsList.innerHTML = '';
 
-              // Önceki önerileri temizle
-              suggestionsList.innerHTML = '';
+                suggestions.forEach(city => {
+                    const li = document.createElement('li');
+                    li.textContent = city.name;
 
-              // Yeni önerileri göster
-              suggestions.forEach(city => {
-                const li = document.createElement('li');
-                li.textContent = city.name; // Öneri olarak şehir adını ekle
-                li.addEventListener('click', () => {
-                  cityInput.value = city.name; // Öneriye tıklandığında input kutusuna şehir adını yaz
-                  suggestionsList.innerHTML = ''; // Öneri listesini temizle
+                    li.addEventListener('click', () => {
+                        cityInput.value = city.name;
+                        checkWeather(city.name);
+                        suggestionsList.innerHTML = '';
+                    });
+                    suggestionsList.appendChild(li);
                 });
-                suggestionsList.appendChild(li);
-             });
             }
-            const apiKey ="7a067376bf61bbc1eead0b0394ba6ea2"; // Hava durumu API anahtarını tanımlar
-            const apiUrl ="https://api.openweathermap.org/data/2.5/weather?units=metric&q="; // Hava durumu API URL'sini tanımlar
-            const searchBox=document.querySelector(".search input"); // Arama kutusunu seçer
-            const searchBtn=document.querySelector(".search button"); // Arama düğmesini seçer
-            const weatherIcon = document.querySelector(".weather-icon"); // Hava durumu ikonunu seçer
+
+// Türkçe karakterleri İngilizce karakterlere dönüştürme fonksiyonu internette hazır kodlar da vardı bunun için zaten ve mantığını da anladım
+            function normalizeString(metin) {
+                const charMap = {
+                    'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+                    'Ç': 'C', 'Ğ': 'G', 'İ': 'I', 'Ö': 'O', 'Ş': 'S', 'Ü': 'U'
+                };
+                return metin.replace(/[çğışöüÇĞİŞÖÜ]/g, char => charMap[char]); //g burada global bir bayrak türüdür. Farklı bayrak türleri de vardır
+            }
+
+            // Aşağı ve yukarı ok tuşlarına basıldığında ve enter tuşuna basıldığında öneriler arasında dolaşma
+cityInput.addEventListener('keydown', function(event) {
+    const suggestions = document.querySelectorAll('#suggestions li'); // Öneri listesindeki tüm öğeleri seçer
+    let selectedIndex = -1; // Başlangıçta seçilen öneri yoktur, bu nedenle -1 olarak ayarlanır
+
+    // Öneri listesindeki seçili öğeyi bulma
+    suggestions.forEach((item, index) => {
+        if (item.classList.contains('selected')) {
+            selectedIndex = index; // Seçili öğe bulunursa, seçilen indeksi günceller
+        }
+    });
+
+    // Aşağı ok tuşuna basıldığında seçili öğeyi değiştirme
+    if (event.key === 'ArrowDown') {
+        selectedIndex++; // Seçili indeksi artırır
+        if (selectedIndex >= suggestions.length) {
+            selectedIndex = 0; // Seçili indeks listenin sonuna ulaşırsa, başa döner
+        }
+    }
+    // Yukarı ok tuşuna basıldığında seçili öğeyi değiştirme
+    else if (event.key === 'ArrowUp') {
+        selectedIndex--; // Seçili indeksi azaltır
+        if (selectedIndex < 0) {
+            selectedIndex = suggestions.length - 1; // Seçili indeks listenin başına ulaşırsa, sona gider
+        }
+    }
+    // Enter tuşuna basıldığında seçili öğeyi onaylama
+    else if (event.key === 'Enter' && selectedIndex !== -1) {
+        const selectedCity = suggestions[selectedIndex].textContent; // Seçilen önerinin metnini alır
+        cityInput.value = selectedCity; // Seçilen şehri giriş kutusuna yaz
+        checkWeather(selectedCity); // Seçilen şehrin hava durumunu kontrol etmek için checkWeather fonksiyonunu çağırın
+        suggestionsList.innerHTML = ''; // Öneri listesini temizle
+        return; // Fonksiyondan çık
+    }
+
+    // Seçili öğeyi güncelleme ve input kutusuna yazma
+    suggestions.forEach((item, index) => {
+        if (index === selectedIndex) {
+            item.classList.add('selected'); // Seçili öğeye "selected" sınıfını ekler
+            cityInput.value = item.textContent; // Giriş kutusuna seçili önerinin metnini yazar
+        } else {
+            item.classList.remove('selected'); // Seçili olmayan öğelerin "selected" sınıfını kaldırır
+        }
+    });
+});
+
+            
+            
+
             async function checkWeather(city){ // Şehir hava durumunu kontrol eden asenkron fonksiyon
                 const response = await fetch(apiUrl + city +  `&appid=${apiKey}`); // API'ye şehir adını gönderir ve yanıtı bekler
                 
@@ -152,6 +248,8 @@
                 }
             });
             
+
+
         </script>
         
 
