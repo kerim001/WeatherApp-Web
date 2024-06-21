@@ -22,6 +22,9 @@
                 <p>Bilinmeyen şehir ismi</p> <!-- Hatalı giriş durumunda görüntülenecek hata mesajı -->
             </div>
             <div class="weather">
+                <div class="header">
+                    <button class="headerbutton" id="starButton"><i id="StarIcon" class="fa-regular fa-star"></i></button>
+                </div>
                 <img src="images/rain.png" class="weather-icon"> <!-- Hava durumu ikonunu gösteren resim -->
                 <h1 class="temp">40°C</h1> <!-- Sıcaklık bilgisini gösteren başlık -->
                 <h2 class="city" id="sehir">Adana</h2> <!-- Şehir adını gösteren başlık -->
@@ -52,7 +55,7 @@
                         </div>
                     </div>
                   </div>
-                <div class="favCityy">
+                <div class="HomeButton">
                     <button class="btn btn-primary text-start" type="button" id="FavCity">
                         <i class="fa fa-home"></i>
                     </button>
@@ -76,10 +79,10 @@
             const cityInput = document.getElementById('cityInput');// Input kutusu ve öneri listesi
             const suggestionsList = document.getElementById('suggestions');
             let citiesData; // Şehir verilerini depolamak için değişken
-            var favCityButton = document.getElementById('FavCity');
+            var StarButton = document.getElementById('starButton');
+            var starButtonIcon = document.getElementById('StarIcon')
+            var HomeButton = document.querySelector(".HomeButton button")
 
-            
-        
 
 
             // Şehir verilerini JSON dosyasından al
@@ -89,22 +92,26 @@
               .catch(error => console.error('Error fetching cities data:', error));
 
 
-            
+            HomeButton.addEventListener('click',function(){
+                var favCity = localStorage.getItem('favCity');
+                checkWeather(favCity)
+            })
+
+
+
             
             // textContent değişkenindeki içeriği yerel depolamaya yolla ve sil
-            favCityButton.addEventListener('click', function() {
+            StarButton.addEventListener('click', function() {
                 const currentCity = document.getElementById('sehir').textContent;
                 var YerelData=localStorage.getItem('favCity');
                 if(YerelData==currentCity){
                     localStorage.clear();
-                    favCityButton.style.backgroundColor="#000000"
-                    favCityButton.style.borderColor="#000000"
+                    starButtonIcon.style.fontWeight="400";
                     alert("favori şehir olan "+currentCity+" kaldırıldı")
                 }
                 else{
                     localStorage.setItem('favCity', currentCity);
-                    favCityButton.style.backgroundColor="#63a4ea"
-                    favCityButton.style.borderColor="#63a4ea"
+                    starButtonIcon.style.fontWeight="600";
                     alert("favori şehir "+currentCity+ " olarak ayarlandı")
                     
                 }
@@ -115,8 +122,10 @@
              window.onload = function() {
                 const favCity = localStorage.getItem('favCity');
                 if (favCity) {
+                    // searchBox.value=favCity;
                     checkWeather(favCity);
                 }
+                
             };
 
 
@@ -235,16 +244,29 @@ cityInput.addEventListener('keydown', function(event) {
         
                     document.querySelector(".weather").style.display="block"; // Hava durumu bilgilerini görünür yapar
                     document.querySelector(".error").style.display="none"; // Hata mesajını gizler
+
+                    if(localStorage.getItem("favCity").trim().toLocaleLowerCase()===city.trim().toLocaleLowerCase()){
+                        starButtonIcon.style.fontWeight="600";
+                    }
+                    else{
+                        starButtonIcon.style.fontWeight="400";
+                        searchBox.value='';
+                    }
+                
                 }
             }
             
             searchBtn.addEventListener("click", ()=>{ // Arama düğmesine tıklama olayı
                 checkWeather(searchBox.value); // checkWeather fonksiyonunu çağırır
+                suggestionsList.innerHTML = ''; // Öneri listesini temizle
+                
             });
             
             searchBox.addEventListener('keydown',function(event){ // Arama kutusunda bir tuşa basılma olayı
                 if(event.key=='Enter'){ // Enter tuşuna basıldığında
                     checkWeather(searchBox.value); // checkWeather fonksiyonunu çağırır
+                    suggestionsList.innerHTML = ''; // Öneri listesini temizle
+                    
                 }
             });
             

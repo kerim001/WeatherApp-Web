@@ -13,7 +13,7 @@ body{
     
     background: linear-gradient(135deg, #00feba, #5b548a);
     color: #fff;
-    margin: 100px auto 50px;
+    margin: 60px auto 40px;
     border-radius: 20px;
     padding: 40px 35px;
     text-align: center;
@@ -52,7 +52,7 @@ body{
 }
 .weather-icon{
     width: 170px;
-    margin-top: 30px;
+    margin-top: 5px;
 }
 .weather h1{
     font-size: 80px;
@@ -113,4 +113,28 @@ ul {
   li:hover {
     background-color: #f4f4f4;
   }
+  .weather .header {
+    display: flex;
+    justify-content: flex-end;
+  }
+  #starButton {
+    background-color: transparent;
+    border-color: transparent;
+    color: #ebfffc;
+    width: 80px; /* Buton genişliği */
+    height: 80px; /* Buton yüksekliği */
+    font-size: 30px; /* İkon boyutu */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+#StarIcon {
+    font-weight: 400;
+}
+
+
+
+  
+  
   
